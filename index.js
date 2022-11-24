@@ -67,6 +67,13 @@ async function run() {
             }
         })
 
+        //add products from client to database
+        app.post('/category', async (req, res) => {
+            const book = req.body;
+            const result = await booksCollection.insertOne(book);
+            res.send(result);
+        })
+
     }
     finally {
 
