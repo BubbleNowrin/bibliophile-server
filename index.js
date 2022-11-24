@@ -3,7 +3,7 @@ const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
 
@@ -26,12 +26,30 @@ async function run() {
         //collections
         const usersCollection = client.db('bibliophile').collection('users');
         const categoriesCollection = client.db('bibliophile').collection('categories');
+        const booksCollection = client.db('bibliophile').collection('books');
 
 
         //get categories from database
         app.get('/categories', async (req, res) => {
             const query = {};
             const result = await categoriesCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        //get the books data
+        app.get('/category', async (req, res) => {
+            const query = {};
+            const result = await booksCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        //get category specific books data
+        app.get('/category/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {
+                category_id: id
+            }
+            const result = await booksCollection.find(query).toArray();
             res.send(result);
         })
 
