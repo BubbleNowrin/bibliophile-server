@@ -25,6 +25,15 @@ async function run() {
     try {
         //collections
         const usersCollection = client.db('bibliophile').collection('users');
+        const categoriesCollection = client.db('bibliophile').collection('categories');
+
+
+        //get categories from database
+        app.get('/categories', async (req, res) => {
+            const query = {};
+            const result = await categoriesCollection.find(query).toArray();
+            res.send(result);
+        })
 
         //add users to database
         app.post('/users', async (req, res) => {
@@ -39,6 +48,7 @@ async function run() {
                 res.send(result);
             }
         })
+
     }
     finally {
 
