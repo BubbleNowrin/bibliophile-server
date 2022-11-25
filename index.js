@@ -6,6 +6,7 @@ require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 
 //midlleware
@@ -74,6 +75,26 @@ async function run() {
             const result = await bookingsCollection.findOne(query);
             res.send(result);
         })
+
+        //payment intent
+        app.post("/create-payment-intent", async (req, res) => {
+            const booking = req.body;
+            const price = booking.resalePrice;
+            const amount = price * 100;
+
+            // Create a PaymentIntent with the order amount and currency
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd",
+                "payment_method_types": [
+                    "card"
+                ]
+            });
+
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+        });
 
         //add users to database
         app.post('/users', async (req, res) => {
