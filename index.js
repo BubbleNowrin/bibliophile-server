@@ -107,7 +107,14 @@ async function run() {
         })
 
         //get my products
-        // app.get('/')
+        app.get('/myBooks', async (req, res) => {
+            const email = req.query.email;
+            const query = {
+                sellerEmail: email
+            }
+            const result = await booksCollection.find(query).toArray();
+            res.send(result);
+        })
 
         //payment intent
         app.post("/create-payment-intent", async (req, res) => {
@@ -196,6 +203,16 @@ async function run() {
             res.send(result);
         })
 
+        //delete specific book from my products
+        app.delete('/books/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {
+                _id: ObjectId(id)
+            }
+            const result = await booksCollection.deleteOne(filter);
+            res.send(result);
+        })
+
         //update seller verification status
         app.put('/sellers/:id', async (req, res) => {
             const id = req.params.id;
@@ -209,6 +226,22 @@ async function run() {
                 }
             }
             const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
+
+        //update field for advertise
+        app.put('/books/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {
+                _id: ObjectId(id)
+            }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    advertise: true
+                }
+            }
+            const result = await booksCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         })
 
