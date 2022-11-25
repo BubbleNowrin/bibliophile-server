@@ -40,14 +40,14 @@ async function run() {
         })
 
         //get the books data
-        app.get('/category', async (req, res) => {
+        app.get('/books', async (req, res) => {
             const query = {};
             const result = await booksCollection.find(query).toArray();
             res.send(result);
         })
 
         //get category specific books data
-        app.get('/category/:id', async (req, res) => {
+        app.get('/books/:id', async (req, res) => {
             const id = req.params.id;
             const query = {
                 category_id: id
@@ -94,6 +94,20 @@ async function run() {
             const sellers = await usersCollection.find(query).toArray();
             res.send(sellers);
         })
+
+        //get verified sellers
+        app.get('/verifiedSeller', async (req, res) => {
+            const email = req.query.email;
+            const query = {
+                verifyStatus: true,
+                email: email
+            }
+            const result = await usersCollection.findOne(query);
+            res.send(result);
+        })
+
+        //get my products
+        // app.get('/')
 
         //payment intent
         app.post("/create-payment-intent", async (req, res) => {
@@ -148,7 +162,7 @@ async function run() {
         })
 
         //add products from client to database
-        app.post('/category', async (req, res) => {
+        app.post('/books', async (req, res) => {
             const book = req.body;
             const result = await booksCollection.insertOne(book);
             res.send(result);
