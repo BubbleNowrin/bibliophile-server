@@ -54,6 +54,27 @@ async function run() {
             res.send(result);
         })
 
+        //get the user specific booking 
+        app.get('/bookings', async (req, res) => {
+            const email = req.query.email;
+            console.log(email);
+            const query = {
+                email: email
+            }
+            const result = await bookingsCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        // get one specific booking by id
+        app.get('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {
+                _id: ObjectId(id)
+            }
+            const result = await bookingsCollection.findOne(query);
+            res.send(result);
+        })
+
         //add users to database
         app.post('/users', async (req, res) => {
             const user = req.body;
