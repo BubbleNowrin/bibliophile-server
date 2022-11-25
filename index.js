@@ -86,6 +86,15 @@ async function run() {
             res.send(buyers);
         })
 
+        //get all the sellers
+        app.get('/sellers', async (req, res) => {
+            const query = {
+                role: 'Seller'
+            }
+            const sellers = await usersCollection.find(query).toArray();
+            res.send(sellers);
+        })
+
         //payment intent
         app.post("/create-payment-intent", async (req, res) => {
             const booking = req.body;
