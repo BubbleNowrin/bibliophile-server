@@ -29,6 +29,7 @@ async function run() {
         const categoriesCollection = client.db('bibliophile').collection('categories');
         const booksCollection = client.db('bibliophile').collection('books');
         const bookingsCollection = client.db('bibliophile').collection('bookings');
+        const paymentsCollection = client.db('bibliophile').collection('payments');
 
 
         //get categories from database
@@ -95,6 +96,24 @@ async function run() {
                 clientSecret: paymentIntent.client_secret,
             });
         });
+
+        //add payment info to database
+        app.post('/payments', async (req, res) => {
+            const payment = req.body;
+            const result = await paymentsCollection.insertOne(payment);
+            const id = payment.bookingId;
+            const filter = {
+                _id: ObjectId(id)
+            }
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId
+                }
+            }
+            const updateResult = await bookingsCollection.updateOne(filter, updatedDoc);
+            res.send(result);
+        })
 
         //add users to database
         app.post('/users', async (req, res) => {
