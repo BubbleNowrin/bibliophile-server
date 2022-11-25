@@ -77,6 +77,15 @@ async function run() {
             res.send(result);
         })
 
+        //get all the buyers
+        app.get('/buyers', async (req, res) => {
+            const query = {
+                role: 'Buyer'
+            }
+            const buyers = await usersCollection.find(query).toArray();
+            res.send(buyers);
+        })
+
         //payment intent
         app.post("/create-payment-intent", async (req, res) => {
             const booking = req.body;
@@ -140,6 +149,17 @@ async function run() {
         app.post('/bookings', async (req, res) => {
             const booking = req.body;
             const result = await bookingsCollection.insertOne(booking);
+            res.send(result);
+        })
+
+        //delete buyer
+        app.delete('/buyers/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const filter = {
+                _id: ObjectId(id)
+            }
+            const result = await usersCollection.deleteOne(filter);
             res.send(result);
         })
     }
