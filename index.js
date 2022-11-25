@@ -171,6 +171,33 @@ async function run() {
             const result = await usersCollection.deleteOne(filter);
             res.send(result);
         })
+
+        //delete seller
+        app.delete('/sellers/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {
+                _id: ObjectId(id)
+            }
+            const result = await usersCollection.deleteOne(filter);
+            res.send(result);
+        })
+
+        //update seller verification status
+        app.put('/sellers/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {
+                _id: ObjectId(id)
+            }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    verifyStatus: true
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
+
     }
     finally {
 
