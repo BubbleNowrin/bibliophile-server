@@ -22,6 +22,25 @@ app.get('/', (req, res) => {
     res.send('bibliophile server running');
 })
 
+//Jwt Token implementation
+const verifyJWT = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send('Unauthorized Access');
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden Access' });
+        }
+        req.decoded = decoded;
+        next();
+    })
+
+}
+
 async function run() {
     try {
         //collections
@@ -30,6 +49,14 @@ async function run() {
         const booksCollection = client.db('bibliophile').collection('books');
         const bookingsCollection = client.db('bibliophile').collection('bookings');
         const paymentsCollection = client.db('bibliophile').collection('payments');
+
+
+        //jwt token
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1d' })
+            res.send({ token })
+        })
 
 
         //get categories from database
@@ -57,7 +84,7 @@ async function run() {
         })
 
         //get the user specific booking 
-        app.get('/bookings', async (req, res) => {
+        app.get('/bookings', verifyJWT, async (req, res) => {
             const email = req.query.email;
             console.log(email);
             const query = {
@@ -78,7 +105,7 @@ async function run() {
         })
 
         //get all the buyers
-        app.get('/buyers', async (req, res) => {
+        app.get('/buyers', verifyJWT, async (req, res) => {
             const query = {
                 role: 'Buyer'
             }
@@ -87,7 +114,7 @@ async function run() {
         })
 
         //get all the sellers
-        app.get('/sellers', async (req, res) => {
+        app.get('/sellers', verifyJWT, async (req, res) => {
             const query = {
                 role: 'Seller'
             }
@@ -107,7 +134,7 @@ async function run() {
         })
 
         //get my products
-        app.get('/myBooks', async (req, res) => {
+        app.get('/myBooks', verifyJWT, async (req, res) => {
             const email = req.query.email;
             const query = {
                 sellerEmail: email
@@ -126,7 +153,7 @@ async function run() {
         })
 
         //get reported books
-        app.get('/reported', async (req, res) => {
+        app.get('/reported', verifyJWT, async (req, res) => {
             const query = {
                 report: "true"
             }
@@ -162,7 +189,7 @@ async function run() {
         })
 
         //payment intent
-        app.post("/create-payment-intent", async (req, res) => {
+        app.post("/create-payment-intent", verifyJWT, async (req, res) => {
             const booking = req.body;
             const price = booking.resalePrice;
             const amount = price * 100;
@@ -182,7 +209,7 @@ async function run() {
         });
 
         //add payment info to database
-        app.post('/payments', async (req, res) => {
+        app.post('/payments', verifyJWT, async (req, res) => {
             const payment = req.body;
             const result = await paymentsCollection.insertOne(payment);
             const id = payment.bookingId;
@@ -214,21 +241,21 @@ async function run() {
         })
 
         //add products from client to database
-        app.post('/books', async (req, res) => {
+        app.post('/books', verifyJWT, async (req, res) => {
             const book = req.body;
             const result = await booksCollection.insertOne(book);
             res.send(result);
         })
 
         //add to booking collection 
-        app.post('/bookings', async (req, res) => {
+        app.post('/bookings', verifyJWT, async (req, res) => {
             const booking = req.body;
             const result = await bookingsCollection.insertOne(booking);
             res.send(result);
         })
 
         //delete buyer
-        app.delete('/buyers/:id', async (req, res) => {
+        app.delete('/buyers/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             console.log(id);
             const filter = {
@@ -239,7 +266,7 @@ async function run() {
         })
 
         //delete seller
-        app.delete('/sellers/:id', async (req, res) => {
+        app.delete('/sellers/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const filter = {
                 _id: ObjectId(id)
@@ -249,7 +276,7 @@ async function run() {
         })
 
         //delete specific book from my products
-        app.delete('/books/:id', async (req, res) => {
+        app.delete('/books/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const filter = {
                 _id: ObjectId(id)
@@ -259,7 +286,7 @@ async function run() {
         })
 
         //delete reported item
-        app.delete('/reported/:id', async (req, res) => {
+        app.delete('/reported/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const filter = {
                 _id: ObjectId(id)
@@ -269,7 +296,7 @@ async function run() {
         })
 
         //update seller verification status
-        app.put('/sellers/:id', async (req, res) => {
+        app.put('/sellers/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const filter = {
                 _id: ObjectId(id)
@@ -285,7 +312,7 @@ async function run() {
         })
 
         //update field for advertise
-        app.put('/books/:id', async (req, res) => {
+        app.put('/books/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const filter = {
                 _id: ObjectId(id)
@@ -301,7 +328,7 @@ async function run() {
         })
 
         //update field for report
-        app.put('/reported/:id', async (req, res) => {
+        app.put('/reported/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const filter = {
                 _id: ObjectId(id)
