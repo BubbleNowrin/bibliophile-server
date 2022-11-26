@@ -116,6 +116,15 @@ async function run() {
             res.send(result);
         })
 
+        //get books with advertise field
+        app.get('/advertised', async (req, res) => {
+            const query = {
+                advertise: "true"
+            }
+            const result = await booksCollection.find(query).toArray();
+            res.send(result);
+        })
+
         //payment intent
         app.post("/create-payment-intent", async (req, res) => {
             const booking = req.body;
@@ -238,7 +247,23 @@ async function run() {
             const options = { upsert: true };
             const updatedDoc = {
                 $set: {
-                    advertise: true
+                    advertise: "true"
+                }
+            }
+            const result = await booksCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
+
+        //update field for report
+        app.put('/reported/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {
+                _id: ObjectId(id)
+            }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    report: "true"
                 }
             }
             const result = await booksCollection.updateOne(filter, updatedDoc, options);
