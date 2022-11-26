@@ -134,6 +134,22 @@ async function run() {
             res.send(result);
         })
 
+        //get all the users
+        // app.get('/users', async (req, res) => {
+        //     const query = {};
+        //     const users = await usersCollection.find(query).toArray();
+        //     res.send(users);
+        // })
+
+        // check admin
+        app.get('/users/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            console.log(email);
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            res.send({ isAdmin: user?.role === "Admin" });
+        })
+
         //payment intent
         app.post("/create-payment-intent", async (req, res) => {
             const booking = req.body;
