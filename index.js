@@ -125,6 +125,15 @@ async function run() {
             res.send(result);
         })
 
+        //get reported books
+        app.get('/reported', async (req, res) => {
+            const query = {
+                report: "true"
+            }
+            const result = await booksCollection.find(query).toArray();
+            res.send(result);
+        })
+
         //payment intent
         app.post("/create-payment-intent", async (req, res) => {
             const booking = req.body;
@@ -214,6 +223,16 @@ async function run() {
 
         //delete specific book from my products
         app.delete('/books/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {
+                _id: ObjectId(id)
+            }
+            const result = await booksCollection.deleteOne(filter);
+            res.send(result);
+        })
+
+        //delete reported item
+        app.delete('/reported/:id', async (req, res) => {
             const id = req.params.id;
             const filter = {
                 _id: ObjectId(id)
