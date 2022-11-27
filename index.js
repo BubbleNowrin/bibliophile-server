@@ -50,6 +50,18 @@ async function run() {
         const bookingsCollection = client.db('bibliophile').collection('bookings');
         const paymentsCollection = client.db('bibliophile').collection('payments');
 
+        //verifyAdmin
+        const verifyAdmin = async (req, res, next) => {
+            const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+
+            const user = await usersCollection.findOne(query);
+            if (user?.role !== 'Admin') {
+                return res.status(403).send({ message: 'forbidden Access' });
+            }
+            next();
+        }
+
 
         //jwt token
         app.post('/jwt', async (req, res) => {
@@ -77,7 +89,8 @@ async function run() {
         app.get('/books/:id', async (req, res) => {
             const id = req.params.id;
             const query = {
-                category_id: id
+                category_id: id,
+                status: 'available'
             }
             const result = await booksCollection.find(query).toArray();
             res.send(result);
@@ -105,7 +118,7 @@ async function run() {
         })
 
         //get all the buyers
-        app.get('/buyers', verifyJWT, async (req, res) => {
+        app.get('/buyers', verifyJWT, verifyAdmin, async (req, res) => {
             const query = {
                 role: 'Buyer'
             }
@@ -114,7 +127,7 @@ async function run() {
         })
 
         //get all the sellers
-        app.get('/sellers', verifyJWT, async (req, res) => {
+        app.get('/sellers', verifyJWT, verifyAdmin, async (req, res) => {
             const query = {
                 role: 'Seller'
             }
@@ -146,14 +159,15 @@ async function run() {
         //get books with advertise field
         app.get('/advertised', async (req, res) => {
             const query = {
-                advertise: "true"
+                advertise: "true",
+                status: 'available'
             }
             const result = await booksCollection.find(query).toArray();
             res.send(result);
         })
 
         //get reported books
-        app.get('/reported', verifyJWT, async (req, res) => {
+        app.get('/reported', verifyJWT, verifyAdmin, async (req, res) => {
             const query = {
                 report: "true"
             }
@@ -213,9 +227,11 @@ async function run() {
             const payment = req.body;
             const result = await paymentsCollection.insertOne(payment);
             const id = payment.bookingId;
+            const bookId = payment.bookId;
             const filter = {
                 _id: ObjectId(id)
             }
+
             const updatedDoc = {
                 $set: {
                     paid: true,
@@ -223,6 +239,16 @@ async function run() {
                 }
             }
             const updateResult = await bookingsCollection.updateOne(filter, updatedDoc);
+
+            const query = {
+                _id: ObjectId(bookId)
+            }
+            const updateStatus = {
+                $set: {
+                    status: 'sold'
+                }
+            }
+            const updateStatusResult = await booksCollection.updateOne(query, updateStatus);
             res.send(result);
         })
 
@@ -255,7 +281,7 @@ async function run() {
         })
 
         //delete buyer
-        app.delete('/buyers/:id', verifyJWT, async (req, res) => {
+        app.delete('/buyers/:id', verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             console.log(id);
             const filter = {
@@ -266,7 +292,7 @@ async function run() {
         })
 
         //delete seller
-        app.delete('/sellers/:id', verifyJWT, async (req, res) => {
+        app.delete('/sellers/:id', verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = {
                 _id: ObjectId(id)
@@ -286,7 +312,7 @@ async function run() {
         })
 
         //delete reported item
-        app.delete('/reported/:id', verifyJWT, async (req, res) => {
+        app.delete('/reported/:id', verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = {
                 _id: ObjectId(id)
@@ -296,7 +322,7 @@ async function run() {
         })
 
         //update seller verification status
-        app.put('/sellers/:id', verifyJWT, async (req, res) => {
+        app.put('/sellers/:id', verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = {
                 _id: ObjectId(id)
