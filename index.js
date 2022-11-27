@@ -63,6 +63,18 @@ async function run() {
             next();
         }
 
+        //verifySeller
+        const verifySeller = async (req, res, next) => {
+            const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+
+            const user = await usersCollection.findOne(query);
+            if (user?.role !== 'Seller') {
+                return res.status(403).send({ message: 'forbidden Access' });
+            }
+            next();
+        }
+
 
         //jwt token
         app.post('/jwt', async (req, res) => {
@@ -148,7 +160,7 @@ async function run() {
         })
 
         //get my products
-        app.get('/myBooks', verifyJWT, async (req, res) => {
+        app.get('/myBooks', verifyJWT, verifySeller, async (req, res) => {
             const email = req.query.email;
             const query = {
                 sellerEmail: email
@@ -268,7 +280,7 @@ async function run() {
         })
 
         //add products from client to database
-        app.post('/books', verifyJWT, async (req, res) => {
+        app.post('/books', verifyJWT, verifySeller, async (req, res) => {
             const book = req.body;
             const result = await booksCollection.insertOne(book);
             res.send(result);
@@ -303,7 +315,7 @@ async function run() {
         })
 
         //delete specific book from my products
-        app.delete('/books/:id', verifyJWT, async (req, res) => {
+        app.delete('/books/:id', verifyJWT, verifySeller, async (req, res) => {
             const id = req.params.id;
             const filter = {
                 _id: ObjectId(id)
@@ -339,7 +351,7 @@ async function run() {
         })
 
         //update field for advertise
-        app.put('/books/:id', verifyJWT, async (req, res) => {
+        app.put('/books/:id', verifyJWT, verifySeller, async (req, res) => {
             const id = req.params.id;
             const filter = {
                 _id: ObjectId(id)
