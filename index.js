@@ -49,6 +49,7 @@ async function run() {
         const booksCollection = client.db('bibliophile').collection('books');
         const bookingsCollection = client.db('bibliophile').collection('bookings');
         const paymentsCollection = client.db('bibliophile').collection('payments');
+        const reportsCollection = client.db('bibliophile').collection('reports');
 
         //verifyAdmin
         const verifyAdmin = async (req, res, next) => {
@@ -355,6 +356,17 @@ async function run() {
 
         //update field for report
         app.put('/reported/:id', verifyJWT, async (req, res) => {
+            const report = req.body;
+            const query = {
+                email: report.email,
+                reportId: report.reportId
+            }
+
+            const find = await reportsCollection.findOne(query);
+            if (find) {
+                return res.send({ error: true })
+            }
+            const insert = await reportsCollection.insertOne(report);
             const id = req.params.id;
             const filter = {
                 _id: ObjectId(id)
