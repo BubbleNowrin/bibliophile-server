@@ -275,8 +275,9 @@ async function run() {
             const savedUser = await usersCollection.findOne(query);
             if (!savedUser) {
                 const result = await usersCollection.insertOne(user);
-                res.send(result);
+                return res.send(result);
             }
+            res.send({ message: 'saved user' })
         })
 
         //add products from client to database
